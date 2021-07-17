@@ -47,38 +47,16 @@ public:
                         const std::string& filename, efsw::Action action,
                         std::string oldFilename) override
   {
-    std::lock_guard l(searchTaskM);
-
-    std::unique_ptr<DirectoryInfo> rootDirectoryInfo;
-    searchTask->Stop(rootDirectoryInfo);
-
-    std::cout << std::endl;
-    std::cout << "dir=" << FixPath(dir) << std::endl;
-    std::cout << "filename=" << filename << std::endl;
-    std::cout << "oldFilename=" << oldFilename << std::endl;
-
     auto dirFixed = FixPath(dir);
     auto filenameFixed = FixPath(filename);
     auto oldFilenameFixed = FixPath(oldFilename);
 
-    while (true) {
-      auto pos1 = filenameFixed.find('/');
-      auto pos2 = oldFilenameFixed.find('/');
-      if (pos1 != std::string::npos && pos1 == pos2 &&
-          !memcmp(filenameFixed.data(), oldFilenameFixed.data(), pos1)) {
-        dirFixed += '/';
-        dirFixed += { filenameFixed.begin(), filenameFixed.begin() + pos1 };
-        std::cout << "WOW: " << dirFixed << std::endl;
-        filenameFixed = { filenameFixed.begin() + pos1 + 1,
-                          filenameFixed.end() };
-        oldFilenameFixed = { oldFilenameFixed.begin() + pos1 + 1,
-                             oldFilenameFixed.end() };
+    FindCommonPathParts(dirFixed, filenameFixed, oldFilenameFixed);
 
-      } else {
-        break;
-      }
-    }
-    dirFixed = FixPath(dirFixed);
+    std::lock_guard l(searchTaskM);
+
+    std::unique_ptr<DirectoryInfo> rootDirectoryInfo;
+    searchTask->Stop(rootDirectoryInfo);
 
     auto matchingDirectoryInfo = Find(dirFixed, rootDirectoryInfo.get());
 
@@ -90,9 +68,6 @@ public:
       for (auto it = matchingDirectoryInfo; it != nullptr; it = it->parent) {
         it->sizeInBytes -= directorySizeInBytesDecrease;
       }
-
-      std::cout << "INVALIDATING " << matchingDirectoryInfo->path.u8string()
-                << std::endl;
     }
 
     searchTask = std::make_unique<SearchTask>(std::move(rootDirectoryInfo));
@@ -117,8 +92,30 @@ public:
     return nullptr;
   }
 
+  void FindCommonPathParts(std::string& dirFixed, std::string& filenameFixed,
+                           std::string& oldFilenameFixed)
+  {
+    while (true) {
+      auto pos1 = filenameFixed.find('/');
+      auto pos2 = oldFilenameFixed.find('/');
+      if (pos1 != std::string::npos && pos1 == pos2 &&
+          !memcmp(filenameFixed.data(), oldFilenameFixed.data(), pos1)) {
+        dirFixed += '/';
+        dirFixed += { filenameFixed.begin(), filenameFixed.begin() + pos1 };
+        filenameFixed = { filenameFixed.begin() + pos1 + 1,
+                          filenameFixed.end() };
+        oldFilenameFixed = { oldFilenameFixed.begin() + pos1 + 1,
+                             oldFilenameFixed.end() };
+
+      } else {
+        break;
+      }
+    }
+    dirFixed = FixPath(dirFixed);
+  }
+
   efsw::FileWatcher fileWatcher;
-  std::optional<efsw::WatchID> rootWatchId;
+  std::atomic<efsw::WatchID> rootWatchId;
   std::unique_ptr<SearchTask> searchTask;
 
   std::mutex searchTaskM;
@@ -134,12 +131,6 @@ MyController::MyController()
 void MyController::SetRootPath(const char* newRootPathUtf8)
 {
   auto newRootPath = std::filesystem::u8path(newRootPathUtf8);
-
-  if (pImpl->rootWatchId.has_value()) {
-    // TODO: Fix deadlock in removeWatch
-    pImpl->fileWatcher.removeWatch(pImpl->rootWatchId.value());
-    pImpl->rootWatchId.reset();
-  }
 
   if (Exists(newRootPath)) {
     {
@@ -166,5 +157,6 @@ bool MyController::Exists(const std::filesystem::path& path)
 
 Model MyController::MakeSnapshot() const
 {
+  std::lock_guard l(pImpl->searchTaskM);
   return pImpl->searchTask ? pImpl->searchTask->MakeSnapshot() : Model();
 }
