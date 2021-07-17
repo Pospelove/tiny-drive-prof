@@ -2,8 +2,6 @@
 
 Disk space profiler tool written in C++.
 
-![hh](https://user-images.githubusercontent.com/37947786/126042973-1edac51d-b92d-4477-b351-476c7c6e5d8a.gif)
-![jj](https://user-images.githubusercontent.com/37947786/126043039-95b73cd0-b8df-45a9-8425-76489443ffb0.gif)
 ![kk](https://user-images.githubusercontent.com/37947786/126043045-7d8d1592-86e0-4601-a0a5-3dcbf395e0ca.gif)
 
 ## Features
