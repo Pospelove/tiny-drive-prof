@@ -60,11 +60,16 @@ public:
     auto matchingDirectoryInfo = Find(FixPath(dir), rootDirectoryInfo.get());
 
     if (matchingDirectoryInfo) {
-      std::cout << "FOUND!!=" << matchingDirectoryInfo->path.u8string()
-                << std::endl;
       matchingDirectoryInfo->structureReady = false;
 
-      // TODO: Decrease sizes
+      uint64_t directorySizeInBytesDecrease =
+        matchingDirectoryInfo->sizeInBytes;
+      for (auto it = matchingDirectoryInfo; it != nullptr; it = it->parent) {
+        it->sizeInBytes -= directorySizeInBytesDecrease;
+      }
+
+      std::cout << "INVALIDATING " << matchingDirectoryInfo->path.u8string()
+                << std::endl;
     }
 
     searchTask = std::make_unique<SearchTask>(std::move(rootDirectoryInfo));
