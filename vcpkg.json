@@ -1,0 +1,21 @@
+{
+    "name": "tiny-drive-prof",
+    "version-string": "",
+    "dependencies": [
+        {
+            "name": "imgui",
+            "default-features": true,
+            "platform": "windows",
+            "features": [
+                "win32-binding",
+                "opengl3-gl3w-binding",
+                "glfw-binding"
+            ]
+        },
+        "cr",
+        "efsw",
+        "implot",
+        "glfw3",
+        "thread-pool"
+    ]
+}

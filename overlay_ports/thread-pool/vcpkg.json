@@ -1,0 +1,6 @@
+{
+    "name": "thread-pool",
+    "version": "1.7",
+    "description": "A C++17 thread pool for high-performance scientific computing",
+    "homepage": "https://github.com/bshoshany/thread-pool"
+}
