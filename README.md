@@ -1,8 +1,23 @@
 # tiny-drive-prof
 
-Disk space profiler tool.
+Disk space profiler tool written in C++.
 
-## Prerequisites
+## Features
+
+* Simple and responsive UI.
+* Multithreaded search. Uses `std::thread::hardware_concurrency()` to determine number of threads.
+* Real-time filesystem events handling.
+* For devs: Hot reload based on `cr.h`.
+
+## Installation
+
+* Windows 7 or higher is required *([Windows 10](https://www.microsoft.com/en-us/software-download/windows10) is recommended)*
+* Download [prebuilt version](https://github.com/Pospelove/tiny-drive-prof/releases/).
+* Extract an archive and run `tiny-drive-prof.exe`.
+
+## Building from Sources
+
+### Prerequisites
 
 Before your start make sure that your system meets the conditions:
 
@@ -10,7 +25,7 @@ Before your start make sure that your system meets the conditions:
 * [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
 * [CMake 3.19.1-3.20](https://cmake.org/download/) (3.21 wouldn't work)
 
-## Configuring and Building
+### Configuring and Building
 
 1. Clone the repo, including submodules
    ```sh
