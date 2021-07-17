@@ -1,4 +1,5 @@
 #pragma once
+#include "DirectoryIndexer.h"
 #include "DirectoryInfo.h"
 #include "Model.h"
 #include <filesystem>
@@ -6,8 +7,6 @@
 
 class SearchTask
 {
-  friend class DirectoryIndexer;
-
 public:
   SearchTask(const std::filesystem::path& rootPath);
   ~SearchTask();
@@ -17,9 +16,10 @@ public:
   Model MakeSnapshot() const;
 
 private:
-  struct Impl;
+  class Impl;
   std::shared_ptr<Impl> pImpl;
 
-  static void IndexDirectory(DirectoryInfo* directoryInfo,
-                             const std::shared_ptr<Impl>& pImpl_);
+  static void IndexDirectory(
+    DirectoryInfo* directoryInfo,
+    const std::shared_ptr<DirectoryIndexer::TaskDestination>& taskDestination);
 };

@@ -45,6 +45,8 @@ add_library(guest SHARED
   src/guest/App.cpp
   src/guest/App.h
   src/guest/Controller.h
+  src/guest/DirectoryIndexer.cpp
+  src/guest/DirectoryIndexer.h
   src/guest/DirectoryInfo.h
   src/guest/main.cpp
   src/guest/Model.h
