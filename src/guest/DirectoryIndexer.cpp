@@ -7,6 +7,7 @@ DirectoryIndexer::DirectoryIndexer(
   , taskDestination(taskDestination_)
 {
   directoryInfo->files.clear();
+  directoryInfo->subdirectoryByUtf8Name.clear();
 }
 
 void DirectoryIndexer::Run()

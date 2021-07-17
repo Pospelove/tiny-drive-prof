@@ -1,5 +1,6 @@
 #include "SearchTask.h"
 #include "DirectoryIndexer.h"
+#include <cassert>
 #include <thread_pool.hpp>
 
 class SearchTask::Impl : public DirectoryIndexer::TaskDestination
@@ -28,10 +29,41 @@ SearchTask::SearchTask(const std::filesystem::path& rootPath)
   pImpl->pool.push_task(IndexDirectory, pImpl->rootDirectoryInfo.get(), pImpl);
 }
 
+void SearchTask::RestartTasks(DirectoryInfo* directoryInfo,
+                              const std::shared_ptr<Impl>& pImpl, int depth)
+{
+  // 100 is enough. Do not want to experiment with recursion depth
+  if (depth == 100) {
+    assert(0 && "RestartTasks reached recursion depth=100");
+    return;
+  }
+
+  for (auto& [key, subDirectoryInfo] : directoryInfo->subdirectoryByUtf8Name) {
+    if (subDirectoryInfo->structureReady) {
+      RestartTasks(subDirectoryInfo.get(), pImpl, depth + 1);
+    } else {
+      pImpl->pool.push_task(IndexDirectory, subDirectoryInfo.get(), pImpl);
+    }
+  }
+}
+
+SearchTask::SearchTask(std::unique_ptr<DirectoryInfo> rootDirectoryInfo)
+  : pImpl(new Impl)
+{
+  pImpl->rootDirectoryInfo = std::move(rootDirectoryInfo);
+
+  if (pImpl->rootDirectoryInfo->structureReady) {
+    auto directoryInfo = pImpl->rootDirectoryInfo.get();
+    RestartTasks(pImpl->rootDirectoryInfo.get(), pImpl, 1);
+  } else {
+    pImpl->pool.push_task(IndexDirectory, pImpl->rootDirectoryInfo.get(),
+                          pImpl);
+  }
+}
+
 SearchTask::~SearchTask()
 {
-  pImpl->terminated = true;
-  pImpl->pool.wait_for_tasks();
+  FinishTasks();
 }
 
 const std::filesystem::path& SearchTask::GetRootPath() const
@@ -57,6 +89,21 @@ Model SearchTask::MakeSnapshot() const
               return lhs.sizeInBytes > rhs.sizeInBytes;
             });
   return model;
+}
+
+void SearchTask::Stop(std::unique_ptr<DirectoryInfo>& out)
+{
+  FinishTasks();
+  out = std::move(pImpl->rootDirectoryInfo);
+
+  pImpl->rootDirectoryInfo =
+    std::make_unique<DirectoryInfo>(out->path, nullptr);
+}
+
+void SearchTask::FinishTasks()
+{
+  pImpl->terminated = true;
+  pImpl->pool.wait_for_tasks();
 }
 
 void SearchTask::IndexDirectory(
