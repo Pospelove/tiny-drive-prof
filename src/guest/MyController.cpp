@@ -57,7 +57,30 @@ public:
     std::cout << "filename=" << filename << std::endl;
     std::cout << "oldFilename=" << oldFilename << std::endl;
 
-    auto matchingDirectoryInfo = Find(FixPath(dir), rootDirectoryInfo.get());
+    auto dirFixed = FixPath(dir);
+    auto filenameFixed = FixPath(filename);
+    auto oldFilenameFixed = FixPath(oldFilename);
+
+    while (true) {
+      auto pos1 = filenameFixed.find('/');
+      auto pos2 = oldFilenameFixed.find('/');
+      if (pos1 != std::string::npos && pos1 == pos2 &&
+          !memcmp(filenameFixed.data(), oldFilenameFixed.data(), pos1)) {
+        dirFixed += '/';
+        dirFixed += { filenameFixed.begin(), filenameFixed.begin() + pos1 };
+        std::cout << "WOW: " << dirFixed << std::endl;
+        filenameFixed = { filenameFixed.begin() + pos1 + 1,
+                          filenameFixed.end() };
+        oldFilenameFixed = { oldFilenameFixed.begin() + pos1 + 1,
+                             oldFilenameFixed.end() };
+
+      } else {
+        break;
+      }
+    }
+    dirFixed = FixPath(dirFixed);
+
+    auto matchingDirectoryInfo = Find(dirFixed, rootDirectoryInfo.get());
 
     if (matchingDirectoryInfo) {
       matchingDirectoryInfo->structureReady = false;
