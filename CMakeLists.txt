@@ -41,8 +41,6 @@ target_include_directories(dependencies INTERFACE ${THREAD_POOL_INCLUDE_DIR})
 find_package(efsw REQUIRED)
 target_link_libraries(dependencies INTERFACE efsw::efsw)
 
-# TODO: Config-specific lib paths (now debug)
-
 set(TDP_GUEST ${CMAKE_SHARED_LIBRARY_PREFIX}tdp-guest${CMAKE_SHARED_LIBRARY_SUFFIX})
 add_library(guest SHARED
   src/guest/App.cpp
