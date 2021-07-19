@@ -1,6 +1,6 @@
 # tiny-drive-prof
 
-Disk space profiler tool written in C++.
+Simple C++ program with ImGui-based interface, that shows you proportions of files in a specified directory. Nothing excess. Infinity search. Filesystem events reaction. Enjoy.
 
 ![kk](https://user-images.githubusercontent.com/37947786/126043045-7d8d1592-86e0-4601-a0a5-3dcbf395e0ca.gif)
 
