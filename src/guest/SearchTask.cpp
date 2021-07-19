@@ -29,24 +29,6 @@ SearchTask::SearchTask(const std::filesystem::path& rootPath)
   pImpl->pool.push_task(IndexDirectory, pImpl->rootDirectoryInfo.get(), pImpl);
 }
 
-void SearchTask::RestartTasks(DirectoryInfo* directoryInfo,
-                              const std::shared_ptr<Impl>& pImpl, int depth)
-{
-  // 100 is enough. Do not want to experiment with recursion depth
-  if (depth == 100) {
-    assert(0 && "RestartTasks reached recursion depth=100");
-    return;
-  }
-
-  for (auto& [key, subDirectoryInfo] : directoryInfo->subdirectoryByUtf8Name) {
-    if (subDirectoryInfo->structureReady) {
-      RestartTasks(subDirectoryInfo.get(), pImpl, depth + 1);
-    } else {
-      pImpl->pool.push_task(IndexDirectory, subDirectoryInfo.get(), pImpl);
-    }
-  }
-}
-
 SearchTask::SearchTask(std::unique_ptr<DirectoryInfo> rootDirectoryInfo)
   : pImpl(new Impl)
 {
@@ -112,4 +94,22 @@ void SearchTask::IndexDirectory(
 {
   DirectoryIndexer directoryIndexer(directoryInfo, taskDestination);
   directoryIndexer.Run();
+}
+
+void SearchTask::RestartTasks(DirectoryInfo* directoryInfo,
+                              const std::shared_ptr<Impl>& pImpl, int depth)
+{
+  // 100 is enough. Do not want to experiment with recursion depth
+  if (depth == 100) {
+    assert(0 && "RestartTasks reached recursion depth=100");
+    return;
+  }
+
+  for (auto& [key, subDirectoryInfo] : directoryInfo->subdirectoryByUtf8Name) {
+    if (subDirectoryInfo->structureReady) {
+      RestartTasks(subDirectoryInfo.get(), pImpl, depth + 1);
+    } else {
+      pImpl->pool.push_task(IndexDirectory, subDirectoryInfo.get(), pImpl);
+    }
+  }
 }
